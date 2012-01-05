@@ -185,10 +185,11 @@ class RegistryTest extends PHPUnit_Framework_TestCase
     public function testRegistryExceptionClassNotFound()
     {
         try {
-            $registry = @Registry::setClassName('classdoesnotexist');
+            $fail_class = 'classdoesnotexist';
+            $registry = @Registry::setClassName($fail_class);
             $this->fail('Expected exception, because we cannot initialize the registry using a non-existent class.');
-        } catch (Zend\Loader\Exception $e) {
-            $this->assertRegExp('/file .* does not exist or .*/i', $e->getMessage());
+        } catch (Kohana_Exception $e) {
+            $this->assertContains($fail_class, $e->getMessage());
         }
     }
 
