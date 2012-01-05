@@ -1,0 +1,676 @@
+<?xml version="1.0"?>
+<getTables>
+	<item>
+		<expect>tour_hotels, tour_resorts, tour_countries, tour_hotel_photos, tour_hotel_classes, tour_feeding, tour_hotel_type_rooms, tour_operators, tour_accomodations, tour_cities, tour_currency, tour_prices</expect>
+		<data>SELECT
+                DISTINCT
+                h.th_id,
+
+                o.to_name,
+                o.to_logo,
+                h.th_name_ru hotel_name,
+                SUBSTRING(h.th_description_ru,1,300) description,
+                r.tr_name_ru resort_name,
+                c.tct_name_ru country_name,
+                hp.thp_photo photo,
+                p.tp_thtr_id,
+                p.tp_leave_date,
+                hr.thtr_name_ru hotel_room,
+                p.ta_id, a.ta_name,
+                a.ta_short_description,
+                cr.tcr_code,
+                p.tp_tf_id,
+                f.feeding_code,
+                hc.thc_code,
+                hc.thc_id,
+
+                p.tp_leave_date,
+                p.tp_duration_nights,
+                p.tp_duration_days,
+                p.tp_price,
+                p.tp_to_id,
+
+                MAX(p.tp_spo)
+               FROM
+                   tour_hotels h
+                     LEFT JOIN tour_resorts r ON r.tr_id = h.tr_id
+                     LEFT JOIN tour_countries c ON c.tct_id = r.tr_tct_id
+                     LEFT JOIN tour_hotel_photos hp ON h.th_id =
+hp.thp_th_id AND hp.thp_default = 1,
+                   tour_hotel_classes hc,
+                   tour_feeding f,
+                   tour_hotel_type_rooms hr,
+                   tour_operators o,
+                   tour_accomodations a,
+                   tour_cities cs,
+                   tour_currency cr,
+
+                   tour_prices p , (
+                       SELECT
+                            p2.tp_id, p2.tp_to_id, p2.tp_spo, p2.tp_price
+                           ,MAX(p2.tp_spo) spomax
+                          FROM
+                             tour_hotels h2,
+                             tour_cities cs2,
+                             tour_prices p2
+              WHERE
+                              p2.tp_th_id = h2.th_id
+                           AND h2.th_name_url = 'A-One-Royal-Cruise'
+                            AND tp_leave_date = DATE('2009-10-24')
+                            AND tp_duration_nights BETWEEN 7 AND 7
+
+#                          AND p2.ta_id = 6
+                            AND p2.tp_tc_from_id = cs2.tc_id
+                            AND cs2.tc_name_url = 'Kyiv'
+                             AND tp_tf_id = 8
+                      GROUP BY  p2.tp_to_id, p2.ta_id, p2.tp_tf_id
+                   ) px
+              WHERE
+                    h.thc_id = hc.thc_id
+                AND p.tp_thtr_id = hr.thtr_id
+                AND p.tp_tf_id = f.feeding_id
+                AND p.tp_to_id = o.to_id
+                AND p.ta_id = a.ta_id
+                AND p.tp_tcr_id = cr.tcr_id
+                AND h.th_name_url = 'A-One-Royal-Cruise'
+                 AND tp_leave_date = DATE('2009-10-24')
+                 AND tp_duration_nights BETWEEN 7 AND 7
+
+                AND p.tp_tc_from_id = cs.tc_id
+                AND cs.tc_name_url = 'Kyiv'
+                 AND tp_tf_id = 8
+                AND p.tp_th_id = h.th_id
+                AND p.tp_error IS NULL
+
+                AND p.tp_spo = px.spomax
+
+              GROUP BY  p.tp_to_id, p.tp_thtr_id, p.ta_id, p.tp_tf_id
+              ORDER BY p.tp_price, to_name, ta_name
+		</data>
+	</item>
+
+	<item>
+		<expect>tour_hotels, tour_hotel_photos, tour_hotel_classes, tour_resorts, tour_cities, tour_countries, tour_accomodations, tour_feeding, tour_types_hotels, tour_types, tour_prices, tour_hotel_counts, tour_date_counts, tour_currency, tour_ondate_price_counts</expect>
+		<data>SELECT
+                SQL_CACHE
+                SQL_CALC_FOUND_ROWS
+
+                h1.th_id,
+
+                p.tp_id,
+                p.tp_tc_from_id,
+
+                c.tct_id,
+                c.tct_name_ru country_name,
+                r.tr_name_url resort_name_url,
+                h1.th_name_url hotel_name_url,
+                r.tr_name_ru resort_name,
+                h1.th_name_ru hotel_name,
+                cs.tc_name_ru city_from_name,
+                hp.thp_photo photo,
+                ch.cnt hotels_count,
+                dc.cnt dates_count,
+                hc.thc_id,
+                hc.thc_code,
+                GROUP_CONCAT(DISTINCT f.feeding_code) feeding,
+                /* hotel features */
+                CASE
+                WHEN h1.th_ter_atheletic_room OR
+h1.th_ter_fitness_centre OR h1.th_ter_gymnasium
+                THEN TRUE ELSE NULL
+                END fitness_centre,
+                CASE
+                WHEN h1.th_ter_open_pool OR h1.th_ter_covered_pool OR
+h1.th_ter_baby_pool
+                THEN TRUE ELSE NULL
+                END open_pool,
+                CASE
+                WHEN h1.th_ter_restaurant OR h1.th_ter_vip_restaurant OR
+h1.th_ter_rest_a_la_carte
+                THEN TRUE ELSE NULL
+                END restaurant,
+                h1.th_ter_spa_centre spa_centre,
+                h1.th_ter_internet_cafe internet_cafe,
+                /* tour features */
+                p.tp_tt_id transport,
+                1 transfer,
+                -1 visa,
+                1 insurance,
+                /* prices */
+                p.tp_price,
+                p.ta_id,
+                a.ta_name,
+                a.ta_short_description,
+                SUBSTRING(GROUP_CONCAT(DISTINCT a.ta_name ORDER BY
+a.ta_id),1,30) accomods,
+                p.tp_tf_id,
+                f.feeding_code,
+                p.tp_leave_date,
+                MIN(p.tp_duration_nights) tp_duration_nights,
+                MIN(p.tp_duration_days) tp_duration_days,
+                SUBSTRING(GROUP_CONCAT(DISTINCT p.tp_duration_nights
+ORDER BY p.tp_duration_nights),1,30) duration_nights,
+                MIN(p.tp_price) price,
+                p.tp_to_id,
+                tcr_code
+               FROM
+                    tour_hotels h1
+                      LEFT JOIN tour_hotel_photos hp ON h1.th_id =
+hp.thp_th_id AND hp.thp_default = 1,
+                    tour_hotel_classes hc,
+                    tour_resorts r,
+                    tour_cities cs,
+                    tour_countries c,
+                    tour_accomodations a,
+                    tour_feeding f,
+                    tour_types_hotels tth,
+                    tour_types tt,
+                    tour_prices p USE INDEX (tp_tourlist)
+                      LEFT JOIN tour_hotel_counts ch ON p.tp_th_id =
+ch.th_id
+                      LEFT JOIN tour_date_counts dc ON p.tp_th_id =
+dc.leave_date
+                      LEFT JOIN tour_currency tc ON p.tp_tcr_id = tc.tcr_id
+              WHERE
+                    h1.thc_id = hc.thc_id
+                AND h1.tr_id = r.tr_id
+                AND r.tr_tct_id = c.tct_id
+                AND cs.tc_id = p.tp_tc_from_id
+                AND c.tct_name_url IN ( 'Thailand' )
+
+                AND h1.th_id = tth.tth_th_id
+                AND tth.tth_tts_id = tt.tts_id
+                AND tt.tts_name_url = 'beach'
+
+                AND p.ta_id = a.ta_id
+                AND p.tp_tf_id = f.feeding_id
+                AND hc.thc_id IN (1,2,3,4,5,6,7)
+                AND p.tp_price BETWEEN 0 AND 1000000
+
+
+                AND p.tp_leave_date = (
+                  SELECT
+                     leave_date
+                  FROM
+                     tour_ondate_price_counts o,
+                     tour_countries c
+                  WHERE
+                     o.tct_id = c.tct_id
+                     AND o.tts_id = tt.tts_id
+                     AND c.tct_name_url IN ( 'Thailand' )
+                     ORDER BY ABS(leave_date - DATE('2009-10-24'))
+                  LIMIT 1)
+                AND p.ta_id IN ( 6 )
+
+
+
+                AND p.tp_th_id = h1.th_id
+                AND p.tp_thtr_id &lt;&gt; 0
+                AND p.tp_error IS NULL
+                AND p.tp_tc_from_id = cs.tc_id
+                AND cs.tc_name_url = 'Kyiv'
+
+             GROUP BY th_id      #, ta_id, tp_tf_id, tp_duration_nights
+
+             ORDER BY price
+             LIMIT 0, 10</data>
+	</item>
+
+	<item>
+		<expect>tour_opinions, t_opinions, tour_users, tour_hotels, tour_resorts, tour_countries, t_kurorts, t_countries, tour_sightseens</expect>
+		<data>(            SELECT
+                 o.top_id,
+                 o.top_tot_id type_obj,
+                 c.tct_name_url country_name_url,
+                 c.tct_name_ru country_name,
+                 ct.nazv country_name_old,
+                 r.tr_name_url resort_name_url,
+                 r.tr_name_ru resort_name,
+                 k.nazv resort_name_old,
+                 h.th_name_url obj_name_url,
+                 h.th_name_ru obj_name,
+                 o.top_obj_id,
+                 SUBSTRING(o.top_body,1,220) body,
+                 o.top_date date,
+                 u.tu_login login,
+                 t.avtor
+               FROM
+                 tour_opinions o
+                    LEFT JOIN turist_ua.t_opinions t ON o.top_id =
+t.opinion_id
+                    LEFT JOIN tour_users u ON o.top_user_id = u.tu_id,
+                 tour_hotels h
+                    LEFT JOIN tour_resorts r ON h.tr_id = r.tr_id
+                    LEFT JOIN tour_countries c ON c.tct_id = r.tr_tct_id
+                    LEFT JOIN turist_ua.t_kurorts k ON k.kurort_id =
+r.tr_id
+                    LEFT JOIN turist_ua.t_countries ct ON ct.country_id
+= c.tct_turistua_id
+               WHERE
+                      o.top_tot_id = 1 /* hotel */
+                  AND o.top_obj_id IS NOT NULL
+                  AND o.top_obj_id = h.th_id
+                  AND LENGTH(o.top_body) > 60
+              ORDER BY o.top_date DESC
+              LIMIT 3
+           ) UNION ALL (
+
+           SELECT * FROM ((
+             SELECT
+                 t.opinion_id top_id,
+                 3 type_obj,
+                 c.tct_name_url country_name_url,
+                 c.tct_name_ru country_name,
+                 ct.nazv country_name_old,
+                 NULL resort_name_url,
+                 NULL resort_name,
+                 NULL resort_name_old,
+                 c.tct_name_url obj_name_url,
+                 c.tct_name_ru obj_name,
+                 c.tct_id top_obj_id,
+                 SUBSTRING(t.body,1,220) body,
+                 t.dt date,
+                 NULL login,
+                 t.avtor
+               FROM
+                 turist_ua.t_opinions t,
+                 turist_ua.t_countries ct,
+                 tour_countries c
+               WHERE
+                      t.razdel = 'country' /* country*/
+                  AND t.razdel_id = c.tct_turistua_id
+                  AND LENGTH(t.body) > 60
+             ) UNION ALL (
+             SELECT
+                 t.opinion_id top_id,
+                 2 type_obj,
+                 c.tct_name_url country_name_url,
+                 c.tct_name_ru country_name,
+                 ct.nazv country_name_old,
+                 k.nazv resort_name_url,
+                 k.nazv resort_name,
+                 k.nazv resort_name_old,
+                 k.nazv obj_name_url,
+                 k.nazv obj_name,
+                 c.tct_id top_obj_id,
+                 SUBSTRING(t.body,1,220) body,
+                 t.dt date,
+                 NULL login,
+                 t.avtor
+               FROM
+                 turist_ua.t_opinions t,
+                 turist_ua.t_kurorts k,
+                 turist_ua.t_countries ct,
+                 tour_countries c
+               WHERE
+                      t.razdel = 'kurort' /* resort*/
+                  AND t.razdel_id = k.kurort_id
+                  AND k.country_id = ct.country_id
+                  AND k.country_id = c.tct_turistua_id
+                  AND LENGTH(t.body) > 60
+              )) t
+              ORDER BY t.date DESC
+              LIMIT 3
+           ) UNION ALL (
+             SELECT
+                 o.top_id,
+                 o.top_tot_id type_obj,
+                 NULL country_name_url,
+                 NULL country_name,
+                 NULL country_name_old,
+                 NULL resort_name_url,
+                 NULL resort_name,
+                 NULL resort_name_old,
+                 NULL obj_name_url,
+                 s.ts_name obj_name,
+                 o.top_obj_id,
+                 SUBSTRING(o.top_body,1,220) body,
+                 o.top_date date,
+                 u.tu_login login,
+                 t.avtor
+               FROM
+                 tour_opinions o
+                    LEFT JOIN turist_ua.t_opinions t ON o.top_id =
+t.opinion_id
+                    LEFT JOIN tour_users u ON o.top_user_id = u.tu_id,
+                 tour_sightseens s
+               WHERE
+                      o.top_tot_id = 5 /* country*/
+                  AND o.top_obj_id IS NOT NULL
+                  AND o.top_obj_id = s.ts_id
+                  AND LENGTH(o.top_body) > 60
+              ORDER BY o.top_date DESC
+              LIMIT 3
+           )
+            ORDER BY type_obj#, date</data>
+	</item>
+
+	<item>
+		<expect>tour_hotel_classes, tour_accomodations, tour_feeding, tour_hotels, tour_hotel_photos, tour_resorts, tour_countries, tour_types_hotels, tour_types, tour_prices, tour_cities</expect>
+		<data>SELECT
+             r.tr_id,
+                 h.th_id, r.tr_name_url,h.th_name_url,h.th_name_ru
+hotel_name,c.tct_name_url country_name_url,
+
+hc.thc_id,hc.thc_code,SUBSTRING(h.th_description_ru,1,100)
+th_description_ru,
+                 hp.thp_photo photo,a.ta_name, a.ta_short_description,
+                 p.tp_tf_id,
+f.feeding_code,p.tp_leave_date,p.tp_duration_nights,p.tp_duration_days,p.tp_thtr_id,
+                 p.tp_price
+                FROM
+                   tour_hotel_classes hc,
+                   tour_accomodations a,
+                   tour_feeding f,
+                   tours.tour_hotels h
+                     LEFT JOIN tours.tour_hotel_photos hp ON h.th_id =
+hp.thp_th_id AND hp.thp_default = 1
+                     LEFT JOIN tours.tour_resorts r ON r.tr_id = h.tr_id
+                     LEFT JOIN tour_countries c ON c.tct_id = r.tr_tct_id
+                     LEFT JOIN tours.tour_types_hotels th ON h.th_id =
+th.tth_th_id
+                     LEFT JOIN tour_types t ON th.tth_tts_id = t.tts_id
+                   , tours.tour_prices p,
+                   tour_cities cs , (
+                     SELECT
+                         t.tts_name_url
+                       FROM
+                         tours.tour_hotels h,
+                         tours.tour_types_hotels th,
+                         tour_types t
+                       WHERE
+                         h.th_id = th.tth_th_id
+                        AND th.tth_tts_id = t.tts_id
+                        AND h.th_name_url =  'Coconut-Beach-Resort'
+                   ) z
+              WHERE
+                    h.thc_id = hc.thc_id
+                AND p.tp_th_id = h.th_id
+                AND p.tp_tf_id = f.feeding_id
+                AND p.ta_id = a.ta_id
+                AND h.thc_id = 3
+                AND h.th_name_url &lt;&gt; 'Coconut-Beach-Resort'
+                AND r.tr_id IS NOT NULL
+                 AND tp_leave_date = DATE('2011-02-26')
+                 AND p.ta_id = 6
+                 AND p.tp_tf_id = 2
+                AND ( p.tp_duration_nights BETWEEN 13 AND  13 )
+                AND p.tp_tc_from_id = cs.tc_id
+                AND cs.tc_name_url = 'Kyiv'
+                AND h.th_id = p.tp_th_id
+                AND p.tp_error IS NULL
+
+                AND t.tts_name_url = z.tts_name_url
+                group by h.th_id
+               ORDER BY tp_price ASC
+               LIMIT 3
+;</data>
+	</item>
+
+	<item>
+		<expect>tour_prices, tour_hotels, tour_resorts, t_countries, tour_sightseens, tour_sightseen_points, tour_countries</expect>
+		<data>
+           (
+
+                SELECT
+                    1 tbo_global_type,
+                    tp_to_id tbo_to_id,
+                    SUBSTRING(GROUP_CONCAT(DISTINCT
+t.country_id),1,1024) tbo_countries_id,
+                    SUBSTRING(GROUP_CONCAT(DISTINCT t.nazv),1,2048)
+tbo_countries
+                 FROM
+                    tours.tour_prices p,
+                    tours.tour_hotels h,
+                    tours.tour_resorts r,
+                    tours.tour_countries c,
+                    turist_ua.t_countries t
+                 WHERE
+                      p.tp_th_id = h.th_id
+                    AND h.tr_id = r.tr_id
+                    AND r.tr_tct_id = c.tct_id
+                    AND c.tct_turistua_id = t.country_id
+                 GROUP BY tp_to_id
+               ) UNION ALL (
+
+                SELECT
+                     2 tbo_global_type,
+                     s.ts_to_id tbo_to_id,
+                     SUBSTRING(GROUP_CONCAT(DISTINCT
+t.country_id),1,1024) tbo_countries_url,
+                     SUBSTRING(GROUP_CONCAT(DISTINCT t.nazv),1,2048)
+tbo_countries
+                  FROM
+                     tours.tour_sightseens s,
+                     tours.tour_sightseen_points pt,
+                     tours.tour_resorts r,
+                     tours.tour_countries c,
+                     turist_ua.t_countries t
+                 WHERE
+                     s.ts_id = pt.tsp_ts_id
+                    AND pt.tsp_tr_id = r.tr_id
+                    AND r.tr_tct_id = c.tct_id
+                    AND c.tct_turistua_id = t.country_id
+                 GROUP BY ts_to_id
+           )
+           </data>
+	</item>
+
+    <item>
+        <expect>banners, banner_places, places</expect>
+        <data>select b.* from banners b left join banner_places bp on b.b_id = bp.bp_b_id left join places p on bp.bp_p_id = p.p_id where p.p_name = ? and b.b_show = 1 AND (MD5(b.b_code) = b.b_hash)</data>
+    </item>
+
+	<item>
+        <expect>uforum_mesg1, uforum_theme1, uforum_mesg2, uforum_theme2, uforum_mesg3, uforum_theme3</expect>
+        <data>select
+            uforum_mesg1.id as id,
+            uforum_mesg1.theme_id as theme_id,
+            uforum_theme1.conf_id as conf_id,
+            uforum_mesg1.subj as subj,
+            uforum_mesg1.text as text,
+            uforum_mesg1.author as author,
+            uforum_mesg1.date as date
+
+            from
+                uforum_mesg1, uforum_theme1
+            where
+                uforum_mesg1.theme_id = uforum_theme1.id
+                 and (subj like '%..... 244%' or text like '%..... 244%')  and (uforum_mesg1.date >= 1239397201) and (uforum_mesg1.date &lt;= 1302555599)
+
+                union
+                select
+
+            uforum_mesg2.id as id,
+            uforum_mesg2.theme_id as theme_id,
+            uforum_theme2.conf_id as conf_id,
+            uforum_mesg2.subj as subj,
+            uforum_mesg2.text as text,
+            uforum_mesg2.author as author,
+            uforum_mesg2.date as date
+
+                from
+                    uforum_mesg2, uforum_theme2
+                where
+                    uforum_mesg2.theme_id = uforum_theme2.id
+                     and (subj like '%.....%') and (subj like '%244%')  and (uforum_mesg2.date >= 1239397201) and (uforum_mesg2.date &lt;= 1302555599)
+
+                union
+                select
+
+            uforum_mesg3.id as id,
+            uforum_mesg3.theme_id as theme_id,
+            uforum_theme3.conf_id as conf_id,
+            uforum_mesg3.subj as subj,
+            uforum_mesg3.text as text,
+            uforum_mesg3.author as author,
+            uforum_mesg3.date as date
+
+                from
+                    uforum_mesg3, uforum_theme3
+                where
+                    uforum_mesg3.theme_id = uforum_theme3.id
+                     and (text like '%.....%') and (text like '%244%')  and (uforum_mesg3.date >= 1239397201) and (uforum_mesg3.date &lt;= 1302555599)
+            limit 0,10
+        </data>
+    </item>
+
+    <item>
+        <expect>answers, questions</expect>
+        <data>SELECT SQL_SMALL_RESULT sp_id, MAX(ans_date) FROM ( SELECT q.q_sp_id sp_id, a.ans_date FROM answers a, questions q WHERE q.q_id = a.ans_q_id AND a.ans_date > SUBDATE(CURDATE(),INTERVAL 7 DAY) ORDER BY a.ans_date DESC ) x GROUP BY x.sp_id ORDER BY x.ans_date DESC LIMIT 3</data>
+    </item>
+
+    <item>
+        <expect>news</expect>
+        <data>SELECT n_id `id`, n_url `url`, n_title `title`, n_description `desc`, n_body `body`, n_date `date`, n_photo `photo`, n_fix FROM news WHERE n_tn_id = 1 AND n_show = 1 AND n_date &lt; NOW() ORDER BY n_fix DESC, n_date DESC LIMIT 5</data>
+    </item>
+
+	<item>
+		<expect>_redirects</expect>
+		<data>SELECT r.rd_new_url FROM _redirects AS r WHERE r.rd_old_url = ? OR r.rd_old_url = ? OR r.rd_old_url = ? OR r.rd_old_url = ? LIMIT 1</data>
+    </item>
+
+    <item>
+		<expect>forum_theme, forum_mesg</expect>
+		<data>SELECT top_forum.* FROM ( SELECT forum.* FROM ( SELECT forum.id, forum.name, forum.messages_num, count(forum.users) participants, 0 archive, date FROM( SELECT forum.id, forum.name, forum.messages_num, count(*) users, date FROM( SELECT id, name, messages_num FROM likar.forum_theme WHERE DATEDIFF(CURDATE(), FROM_UNIXTIME(date)) &lt; 7 ORDER BY messages_num DESC, date DESC LIMIT 6 ) forum LEFT JOIN likar.forum_mesg ON forum_mesg.theme_id = forum.id GROUP BY forum.id, forum_mesg.user_id ) forum GROUP BY forum.id ) forum ) top_forum ORDER BY top_forum.messages_num DESC, top_forum.date DESC LIMIT 6</data>
+    </item>
+
+    <item>
+        <expect>table1</expect>
+        <data>SELECT * FROM table1</data>
+    </item>
+
+    <item>
+        <expect>table1, table2</expect>
+        <data>SELECT * FROM table1 JOIN table2 ON id1 = id2</data>
+    </item>
+
+    <item>
+        <expect>meta, meta_tags, site_pages, site_controllers, site_controller_actions</expect>
+        <data>SELECT mt_tag tag, m_data data FROM meta, meta_tags, site_pages INNER JOIN site_controllers ON spg_sc_id = sc_id INNER JOIN site_controller_actions ON spg_sca_id = sca_id WHERE m_mt_id = mt_id AND m_spg_id = spg_id AND spg_name_url = ? AND sc_name_url = ? AND sca_name_url = ?</data>
+    </item>
+
+    <item>
+        <expect>news, sections</expect>
+        <data> SELECT * FROM (( SELECT DISTINCT n.n_id id, n.n_title title, s.s_name category, s.s_name_url name_url_1, s1.s_name_url name_url_2, s2.s_name_url name_url_3, s3.s_name_url name_url_4, s.s_parent_id parent_id_1, s1.s_parent_id parent_id_2, s2.s_parent_id parent_id_3, s3.s_parent_id parent_id_4, CASE WHEN CHAR_LENGTH(n.n_description) > 160 THEN CONCAT(SUBSTRING(TRIM(n.n_description),1,160),'...') ELSE TRIM(n.n_description) END description, n.n_date date FROM news n, sections s LEFT JOIN sections s1 ON s.s_parent_id = s1.s_id LEFT JOIN sections s2 ON s1.s_parent_id = s2.s_id LEFT JOIN sections s3 ON s2.s_parent_id = s3.s_id WHERE n.n_tn_id = 2 AND n.n_l_id = 1 AND n.n_show = 1 AND n.n_announcement = 1 AND n.n_fix = 1 AND n.n_s_id IN (1300, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026, 2027, 2028, 2029, 2030, 2031, 2050, 2051, 2052, 2053, 2061, 2062, 2063, 2071, 2072, 2073, 2081, 2082, 2083, 2091, 2092, 2093, 2094, 2095, 2096, 2101, 2102, 2103, 2111, 2112, 2113, 2114, 2121, 2122, 2123, 2124, 2125, 2131, 2132, 2133, 2134, 2135, 2136, 2137, 2141, 2142, 2143, 2151, 2152, 2155, 2156, 2157, 2158, 2160, 2161, 2162, 2163, 2164, 2171, 2172, 2173, 2174, 2175, 2176, 2181, 2182, 2183, 2184, 2185, 2191, 2192, 2193, 2196, 2197, 2198, 2201, 2202, 2203, 2204, 2205, 2206, 2207, 2208, 2762, 2772, 2773, 2780, 2781, 2784, 2785, 2795, 2797, 2799, 2800, 1301, 1501, 1502, 1503, 1504, 1505, 1506, 1507, 1508, 1509, 1510, 1511, 1512, 2710, 2727, 2728, 2739, 2792, 1303, 1518, 1519, 1520, 1521, 1522, 1523, 2729, 884, 890, 893, 2621, 2632, 2642, 2651, 2661, 2671, 2681, 2691, 2696, 2711, 2734, 2756) AND n.n_s_id = s.s_id AND s.s_profi = 0 AND n.n_date &lt; NOW() ORDER BY date DESC LIMIT 3 ) UNION ( SELECT DISTINCT n.n_id id, n.n_title title, s.s_name category, s.s_name_url name_url_1, s1.s_name_url name_url_2, s2.s_name_url name_url_3, s3.s_name_url name_url_4, s.s_parent_id parent_id_1, s1.s_parent_id parent_id_2, s2.s_parent_id parent_id_3, s3.s_parent_id parent_id_4, CASE WHEN CHAR_LENGTH(n.n_description) > 160 THEN CONCAT(SUBSTRING(TRIM(n.n_description),1,160),'...') ELSE TRIM(n.n_description) END description, n.n_date date FROM news n, sections s LEFT JOIN sections s1 ON s.s_parent_id = s1.s_id LEFT JOIN sections s2 ON s1.s_parent_id = s2.s_id LEFT JOIN sections s3 ON s2.s_parent_id = s3.s_id WHERE n.n_tn_id = 2 AND n.n_l_id = 1 AND n.n_show = 1 AND n.n_announcement = 1 AND n.n_s_id IN (1300, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026, 2027, 2028, 2029, 2030, 2031, 2050, 2051, 2052, 2053, 2061, 2062, 2063, 2071, 2072, 2073, 2081, 2082, 2083, 2091, 2092, 2093, 2094, 2095, 2096, 2101, 2102, 2103, 2111, 2112, 2113, 2114, 2121, 2122, 2123, 2124, 2125, 2131, 2132, 2133, 2134, 2135, 2136, 2137, 2141, 2142, 2143, 2151, 2152, 2155, 2156, 2157, 2158, 2160, 2161, 2162, 2163, 2164, 2171, 2172, 2173, 2174, 2175, 2176, 2181, 2182, 2183, 2184, 2185, 2191, 2192, 2193, 2196, 2197, 2198, 2201, 2202, 2203, 2204, 2205, 2206, 2207, 2208, 2762, 2772, 2773, 2780, 2781, 2784, 2785, 2795, 2797, 2799, 2800, 1301, 1501, 1502, 1503, 1504, 1505, 1506, 1507, 1508, 1509, 1510, 1511, 1512, 2710, 2727, 2728, 2739, 2792, 1303, 1518, 1519, 1520, 1521, 1522, 1523, 2729, 884, 890, 893, 2621, 2632, 2642, 2651, 2661, 2671, 2681, 2691, 2696, 2711, 2734, 2756) AND n.n_s_id = s.s_id AND s.s_profi = 0 AND n.n_date &lt; NOW() ORDER BY date DESC LIMIT 3 ) ) z WHERE 1 = 1 LIMIT 3</data>
+    </item>
+
+    <item>
+        <expect>forum_theme</expect>
+        <data>SELECT id, conf_id, name, creator, messages_num FROM likar.forum_theme WHERE conf_id = 9 GROUP BY name ORDER BY date DESC LIMIT 5</data>
+    </item>
+
+    <item>
+        <expect>doctors, cities, regions</expect>
+        <data>SELECT a.d_id, CONCAT(a.d_sname, ' ', a.d_name, ' ', a.d_fname) as d_name, SUBSTR(a.d_description, 0, 30) as d_description, a.d_rating, c.c_name_url, b.rg_name_url, 'http://vrach.likar5.info/' as domain FROM doctors a LEFT JOIN cities c ON c.c_id=a.d_c_id LEFT JOIN regions b ON b.rg_id=c.c_rg_id WHERE a.d_rating is not NULL ORDER BY a.d_rating desc LIMIT 5</data>
+    </item>
+
+    <item>
+        <expect>hospitals, cities, regions, hospital_specializations</expect>
+        <data>SELECT a.h_id, a.h_name_ru, SUBSTR(a.h_description, 0, 30) as h_description, a.h_rating, c.c_name_url, b.rg_name_url, 'http://clinics.likar5.info/' as domain, h_lat, h_lon, h_address, h_phones, d.hs_name_url FROM hospitals a LEFT JOIN cities c ON c.c_id=a.h_c_id LEFT JOIN regions b ON b.rg_id=c.c_rg_id LEFT JOIN hospital_specializations d ON d.hs_id=a.h_hs_id WHERE a.h_show=1 and a.h_rating is not NULL ORDER BY a.h_rating desc LIMIT 5</data>
+    </item>
+
+    <item>
+        <expect>catalogs, cities, regions</expect>
+        <data>SELECT a.cat_id, a.cat_name_ru, SUBSTR(a.cat_description, 0, 30) as cat_description, a.cat_rating, c.c_name_url, b.rg_name_url, 'http://strahovka.likar5.info/' as domain, cat_lat, cat_lon, cat_address, cat_phones FROM catalogs a LEFT JOIN cities c ON c.c_id=a.cat_c_id LEFT JOIN regions b ON b.rg_id=c.c_rg_id WHERE a.cat_show=1 and a.cat_tc_id=? and a.cat_rating is not NULL ORDER BY RAND() LIMIT 5</data>
+    </item>
+
+    <item>
+        <expect>news, news_tags, tags, stat_visits</expect>
+        <data>SELECT `t`.`tag_name_ru` `title`, COUNT(`n`.`n_id`) `counts`, SUM(`sv`.`sv_count`) `sum`, SUM(`sv`.`sv_count`) * COUNT(`n`.`n_id`) `order` FROM `news` `n` LEFT JOIN `news_tags` `nt` ON `nt`.`nt_n_id` = `n`.`n_id` LEFT JOIN `tags` `t` ON `t`.`tag_id` = `nt`.`nt_tag_id` LEFT JOIN `stat_visits` `sv` ON `sv`.`sv_n_id` = `n`.`n_id` WHERE `t`.`tag_id` IS NOT NULL AND `n`.`n_show` = 1 AND `n`.`n_date` &lt;= NOW() GROUP BY `t`.`tag_id` ORDER BY `order` DESC LIMIT 30</data>
+    </item>
+
+    <item>
+        <expect>events, cities, regions, countries</expect>
+        <data>SELECT e_id id, e_name name, DATE_FORMAT(e_date, '%Y%m%d') data, e_date date_start, e_date_end date_end, c_name_ru city, ct_name_ru country FROM events e LEFT JOIN cities c ON c.c_id = e.e_c_id LEFT JOIN regions r ON r.rg_id = c.c_rg_id LEFT JOIN countries t ON t.ct_id = r.rg_ct_id WHERE e_moderate = 1 AND e.e_te_id NOT IN (8,9,10,11,12) AND DATE(e_date) BETWEEN DATE_ADD(CURDATE(), INTERVAL -2 MONTH) AND DATE_ADD(CURDATE(), INTERVAL 10 DAY) ORDER BY date_start</data>
+    </item>
+
+    <item>
+		<expect>wiki, wiki_sections</expect>
+		<data>SELECT w.w_id id, w.w_title title, w.w_date date, w.w_body body, w.w_url url, ws.ws_id section_id, ws.ws_name_url slug FROM wiki w LEFT JOIN wiki_sections ws ON w.w_s_id = ws.ws_id WHERE w.w_id = ? LIMIT 1</data>
+    </item>
+
+    <item>
+		<expect>poll, poll_items, poll_results</expect>
+		<data>SELECT p.pl_id id, p.pl_title title, p.pl_description description, pi.pli_id option_id, pi.pli_text option_text, COUNT(DISTINCT pr.pr_hash) option_count, (pr2.pr_item_id IS NOT NULL) is_vote FROM poll p LEFT JOIN poll_items pi ON pi.pli_poll_id = p.pl_id LEFT JOIN poll_results pr ON pr.pr_poll_id = p.pl_id AND pr.pr_item_id = pi.pli_id LEFT JOIN (SELECT * FROM poll_results) pr2 ON pr.pr_hash = ? AND pr2.pr_poll_id = p.pl_id WHERE p.pl_enabled = 1 AND p.pl_id = ? GROUP BY pi.pli_id ORDER BY option_count DESC</data>
+    </item>
+
+    <item>
+		<expect>news</expect>
+		<data>SELECT COUNT(1) AS `zend_paginator_row_count` FROM `news` WHERE (n_show = 1) AND (n_tn_id IN (2, 3)) AND (n_s_id IN (2265, 2426, 2427, 2428, 2430, 2431, 2432)) AND (n_date &lt; NOW())</data>
+    </item>
+
+    <item>
+		<expect>news, news_tags, sections</expect>
+		<data>SELECT count(n.n_id) cnt, n.n_id id, n.n_date, n.n_s_id, s1.s_name_url section, s2.s_name_url section2, s3.s_name_url section3, s4.s_name_url section4, n.n_title, n.n_tn_id FROM news n LEFT JOIN news_tags nt ON n.n_id = nt.nt_n_id LEFT JOIN sections s1 ON s1.s_id = n.n_s_id LEFT JOIN sections s2 ON s2.s_id = s1.s_parent_id AND s1.s_parent_id &lt;&gt; 0 LEFT JOIN sections s3 ON s3.s_id = s2.s_parent_id AND s2.s_parent_id &lt;&gt; 0 LEFT JOIN sections s4 ON s4.s_id = s3.s_parent_id AND s3.s_parent_id &lt;&gt; 0 WHERE nt.nt_tag_id = SOME(SELECT 860 UNION SELECT 869 UNION SELECT 870 UNION SELECT 871 UNION SELECT 874 UNION SELECT 875 UNION SELECT 876 UNION SELECT 877 UNION SELECT 879 UNION SELECT 7944 UNION SELECT 8471 UNION SELECT 9471 UNION SELECT 9473 UNION SELECT 9476 UNION SELECT 9479) AND n.n_show = 1 AND ((s1.s_id BETWEEN 0 AND 8) OR (s1.s_id >= 1300)) GROUP BY n.n_id ORDER BY cnt DESC LIMIT 7</data>
+    </item>
+
+    <item>
+		<expect>forum_theme, sphinx_forum_news3</expect>
+		<data>SELECT `ft`.`id`, `ft`.`name`, `sphinx_forum_news3`.`weight` FROM `likar`.`forum_theme` AS `ft` LEFT JOIN `sphinx_forum_news3` ON sphinx_forum_news3.id = ft.id WHERE (`sphinx_forum_news3`.`query` = 'пневмония пневмония симптомы пневмония у детей пневмония у ребенка хламидия пневмония острая пневмония пневмония легких атипичная пневмония пневмония у взрослых бронхопневмония воспаление легких внебольничная пневмония нозокомиальная пневмония госпитальная пневмония аспирационная пневмония ;mode=any;sort=extended:@weight desc, @id asc;index=forum_news2;limit=6;offset=0')</data>
+    </item>
+
+    <item>
+		<expect>specialties, doctors_specialties, doctors, users, users_roles, questions, answers, photos</expect>
+		<data>
+		SELECT
+			COUNT(DISTINCT `s`.`sp_id`) AS `zend_paginator_row_count`
+		FROM `specialties` AS `s`
+			LEFT JOIN `doctors_specialties` ON s.sp_id = ds_sp_id
+			LEFT JOIN (
+				SELECT
+					`doctors`.`d_id`,
+					`users`.*,
+					`users_roles`.*
+				FROM `doctors`
+					LEFT JOIN `users` ON u_id = d_u_id
+					LEFT JOIN `users_roles` ON u_id = ur_u_id
+				WHERE
+					(NOT u_locked AND ur_r_id = 3)
+			) AS `d` ON d.d_id = ds_d_id
+			LEFT JOIN (
+				SELECT
+					`specialties`.`sp_id`,
+					COUNT(q_id) AS `q_num`
+				FROM `specialties`
+					LEFT JOIN `questions` ON sp_id = q_sp_id
+				WHERE
+					(sp_show_consult = 1)
+				GROUP BY `sp_id`
+			) AS `q` ON s.sp_id = q.sp_id
+			LEFT JOIN (
+				SELECT
+					`questions`.`q_id`,
+					`questions`.`q_sp_id` AS `sp_id`,
+					MAX(ans_id) AS `ans_id`,
+					`doctors`.`d_id`,
+					`doctors`.`d_name`,
+					`doctors`.`d_sname`,
+					`doctors`.`d_fname`,
+					`doctors`.`d_u_id`,
+					`doctors`.`d_description`,
+					`doctors`.`d_rating`
+				FROM `questions`
+					LEFT JOIN `answers` ON q_id = ans_q_id AND ans_d_id IS NOT NULL
+					LEFT JOIN `doctors` ON ans_d_id = d_id
+				WHERE
+					(q_date > SUBDATE(CURDATE(),INTERVAL 180 DAY))
+				GROUP BY `q_sp_id`
+			) AS `z` ON s.sp_id = z.sp_id
+			LEFT JOIN `users` AS `u` ON u.u_id = z.d_u_id
+			LEFT JOIN `photos` AS `ph` ON ph.ph_id = u.u_ph_id
+		WHERE
+			(sp_show_consult = 1)
+		</data>
+    </item>
+
+    <item>
+		<expect>news</expect>
+		<data>SELECT `news`.* FROM `news` WHERE (n_show = 1) AND (n_tn_id IN (1, 2, 3)) AND (n_s_id IN (1306, 2611, 2612, 2613, 2614, 2615, 2616, 2617, 2618, 2619, 2620, 2621, 2622, 2623, 2624, 2631, 2632, 2633, 2634, 2635, 2641, 2642, 2643, 2644, 2645, 2651, 2652, 2653, 2654, 2655, 2661, 2662, 2663, 2664, 2665, 2671, 2672, 2673, 2674, 2675, 2681, 2682, 2683, 2684, 2685, 2691, 2692, 2693, 2694, 2695, 2696, 2697, 2698, 2699, 2700, 2711, 2712, 2713, 2714, 2715, 2733, 2734, 2735, 2736, 2737, 2738, 2755, 2756, 2758, 2763, 2765)) AND (n_date &lt;= NOW()) ORDER BY `n_date` DESC LIMIT 5</data>
+    </item>
+
+    <item>
+		<expect>questions, specialties, answers, doctors, users, photos</expect>
+		<data>SELECT z.q_id id, z.q_date date, z.specialty, IF(CHAR_LENGTH(q.q_text) > 255, CONCAT(SUBSTRING(TRIM(q.q_text),1,255),'...'), TRIM(q.q_text)) text, IF(CHAR_LENGTH(a.ans_text) > 100, CONCAT(SUBSTRING(TRIM(a.ans_text),1,100),'...'), TRIM(a.ans_text)) ans_text, d.d_name doctor_name, d.d_sname doctor_sname, d.d_fname doctor_fname, ph.ph_name photo, d.d_id, d.d_u_id, u.u_name user_name, u.u_from_city u_city, u.u_id, z.num_ans FROM ( SELECT q.q_id, a.ans_id, q.q_date, COUNT(a2.ans_id) num_ans, a.ans_date, s.sp_directon_ru specialty FROM questions q LEFT JOIN specialties s ON q.q_sp_id = s.sp_id LEFT JOIN answers a ON q.q_ans_id_last = a.ans_id LEFT JOIN answers a2 ON q.q_id = a2.ans_q_id WHERE 1 = 1 GROUP BY q.q_id HAVING num_ans > 0 ORDER BY (CASE WHEN (a.ans_date IS NULL) THEN q.q_date ELSE a.ans_date END) DESC LIMIT 20 ) z LEFT JOIN answers a ON (z.ans_id = a.ans_id) LEFT JOIN doctors d ON a.ans_d_id = d.d_id LEFT JOIN users du ON d.d_u_id = du.u_id LEFT JOIN photos ph ON du.u_ph_id = ph.ph_id, questions q LEFT JOIN users u ON q.q_u_id = u.u_id WHERE z.q_id = q.q_id</data>
+    </item>
+</getTables>

@@ -1,0 +1,76 @@
+<?xml version="1.0"?>
+<getTables>
+    <item>
+		<expect>table1</expect>
+		<data>INSERT INTO table1 SELECT * FROM table2 WHERE 1=1</data>
+    </item>
+
+	<item>
+		<expect>tour_opinions</expect>
+		<data>
+insert into tours.tour_opinions (
+   top_tot_id,
+   top_obj_id,
+   top_body,
+   top_rating_id,
+   top_date,
+   top_was_year,
+   top_was_month,
+   razdel_id,
+   top_src
+)
+select
+    1 top_tot_id,
+    a.th_id,
+    concat(body, '<br />', author) body,
+    rating,
+    date,
+    when_year,
+    when_month,
+    top_id razdel_id,
+    2 top_src
+from
+    parser.turtess_opinions2_turist o,
+    parser.accord_hotels a,
+   tours.tour_hotels h
+  where
+     a.th_turtess_id = o.hotelKey
+  and h.th_id = a.th_id</data>
+    </item>
+
+
+    <item>
+    	<expect>tour_types_hotels</expect>
+    	<data>insert ignore into tours.tour_types_hotels (tth_tts_id, tth_th_id)
+select distinct 4 tts_id,  p.tp_th_id th_id
+     from
+         tours.tour_prices p,     tours.tour_hotels h,
+tours.tour_resorts r,     tours.tour_countries c
+  where    p.tp_th_id = h.th_id   and r.tr_id = h.tr_id   and
+r.tr_tct_id = c.tct_id   and c.tct_name_url = 'Indonesia'
+    and p.tp_error is null   and not exists (select tth_id from
+tours.tour_types_hotels th where  th.tth_th_id = h.th_id  and tth_tts_id
+= 4)</data>
+    </item>
+
+    <item>
+        <expect>stat_visits</expect>
+        <data>INSERT INTO `stat_visits` SET `sv_n_id` = ?, `sv_date` = CURDATE(), `sv_count` = 1 ON DUPLICATE KEY UPDATE `sv_count` = `sv_count` + 1</data>
+    </item>
+
+    <item>
+        <expect>stat_visits</expect>
+        <data>INSERT IGNORE INTO `stat_visits` SET `sv_n_id` = ?, `sv_date` = CURDATE(), `sv_count` = 1</data>
+    </item>
+
+    <item>
+        <expect>stat_visits</expect>
+        <data>REPLACE INTO `stat_visits` (`sv_n_id`, `sv_date`, `sv_count`) VALUES (?, CURDATE(), 1)</data>
+    </item>
+
+    <item>
+        <expect>stat_visits</expect>
+        <data>INSERT INTO `stat_visits` (`sv_n_id`, `sv_date`, `sv_count`) VALUES (?, CURDATE(), 1)</data>
+    </item>
+</getTables>
+

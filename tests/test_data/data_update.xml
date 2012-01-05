@@ -1,0 +1,470 @@
+<?xml version="1.0"?>
+<getTables>
+<item>
+		<expect>tour_prices</expect>
+		<data>update
+    tour_prices p, (
+select
+      c.tct_name_url,
+      c.tct_name_ru,
+      r.tr_name_ru,
+      h.th_id,
+      h.th_name_url,
+      p.*
+   from
+      tour_prices p,
+      tour_hotels h,
+      tour_resorts r,
+      tour_countries c
+  where
+       p.tp_th_id = h.th_id
+    and h.tr_id = r.tr_id
+    and r.tr_tct_id = c.tct_id
+#   and c.tct_name_url = 'Thailand'
+#   and c.tct_name_url = 'United-Arab-Emirates'
+    and c.tct_name_url = 'Slovakia'
+#   and tp_leave_date > DATE('2009-11-21')
+   AND p.tp_tc_from_id = 2533
+   AND p.tp_error IS NULL
+# group by th_id
+#limit 100
+) z
+   set p.tp_tcr_id = 2
+where
+    z.th_id = p.tp_th_id
+    and z.ta_id = p.ta_id
+    and z.tp_tf_id = p.tp_tf_id
+    and z.tp_thtr_id = p.tp_thtr_id
+    and z.tp_leave_date = p.tp_leave_date
+    and z.tp_duration_nights = p.tp_duration_nights
+    and z.tp_tt_id = p.tp_tt_id
+		</data>
+    </item>
+<!--
+    <item>
+    	<expect>air_airports</expect>
+    	<data>update air_airports
+set ap_flightstats = (case when ap_iata is not null then ap_iata when
+ap_icao is not null then ap_icao else null end)
+where ap_type is null or ap_type &lt;> 3
+;</data>
+    </item>
+
+    <item>
+		<expect>table1</expect>
+		<data>UPDATE table1 SET id = 5 WHERE 1=1</data>
+    </item>
+
+    <item>
+		<expect>tour_hotels</expect>
+		<data>update tour_hotels h, (
+   select
+       th_id,
+       th_name_ru,
+
+       th_foundation_date,
+
+       th_dist_city,
+       th_dist_airport,
+       th_dist_beach,
+
+       th_description_ru,
+
+     case when th_ter_courts = 'no' then 0 when th_ter_courts = 'yes'
+then 1 when th_ter_courts = 'free' then 1 when th_ter_courts = 'pay'
+then 2 else null end th_ter_courts,
+     case when th_ter_atheletic_room = 'no' then 0 when
+th_ter_atheletic_room = 'yes' then 1 when th_ter_atheletic_room = 'free'
+then 1 when th_ter_atheletic_room = 'pay' then 2 else null end
+th_ter_atheletic_room,
+     case when th_ter_turkish_bath = 'no' then 0 when
+th_ter_turkish_bath = 'yes' then 1 when th_ter_turkish_bath = 'free'
+then 1 when th_ter_turkish_bath = 'pay' then 2 else null end
+th_ter_turkish_bath,
+     case when th_ter_salon_beauty = 'no' then 0 when
+th_ter_salon_beauty = 'yes' then 1 when th_ter_salon_beauty = 'free'
+then 1 when th_ter_salon_beauty = 'pay' then 2 else null end
+th_ter_salon_beauty,
+     case when th_ter_kinder_platform = 'no' then 0 when
+th_ter_kinder_platform = 'yes' then 1 when th_ter_kinder_platform =
+'free' then 1 when th_ter_kinder_platform = 'pay' then 2 else null end
+th_ter_kinder_platform,
+     case when th_ter_covered_pool = 'no' then 0 when
+th_ter_covered_pool = 'yes' then 1 when th_ter_covered_pool = 'free'
+then 1 when th_ter_covered_pool = 'pay' then 2 else null end
+th_ter_covered_pool,
+     case when th_ter_open_pool = 'no' then 0 when th_ter_open_pool =
+'yes' then 1 when th_ter_open_pool = 'free' then 1 when th_ter_open_pool
+= 'pay' then 2 else null end th_ter_open_pool,
+     case when th_ter_baby_pool = 'no' then 0 when th_ter_baby_pool =
+'yes' then 1 when th_ter_baby_pool = 'free' then 1 when th_ter_baby_pool
+= 'pay' then 2 else null end th_ter_baby_pool,
+     case when th_ter_soccer_field = 'no' then 0 when
+th_ter_soccer_field = 'yes' then 1 when th_ter_soccer_field = 'free'
+then 1 when th_ter_soccer_field = 'pay' then 2 else null end
+th_ter_soccer_field,
+     case when th_ter_conf_hall = 'no' then 0 when th_ter_conf_hall =
+'yes' then 1 when th_ter_conf_hall = 'free' then 1 when th_ter_conf_hall
+= 'pay' then 2 else null end th_ter_conf_hall,
+     case when th_ter_shop_center = 'no' then 0 when th_ter_shop_center
+= 'yes' then 1 when th_ter_shop_center = 'free' then 1 when
+th_ter_shop_center = 'pay' then 2 else null end th_ter_shop_center,
+     case when th_ter_internet_cafe = 'no' then 0 when
+th_ter_internet_cafe = 'yes' then 1 when th_ter_internet_cafe = 'free'
+then 1 when th_ter_internet_cafe = 'pay' then 2 else null end
+th_ter_internet_cafe,
+     case when th_ter_gymnasium = 'no' then 0 when th_ter_gymnasium =
+'yes' then 1 when th_ter_gymnasium = 'free' then 1 when th_ter_gymnasium
+= 'pay' then 2 else null end th_ter_gymnasium,
+     case when th_ter_fitness_centre = 'no' then 0 when
+th_ter_fitness_centre = 'yes' then 1 when th_ter_fitness_centre = 'free'
+then 1 when th_ter_fitness_centre = 'pay' then 2 else null end
+th_ter_fitness_centre,
+     case when th_ter_aquapark = 'no' then 0 when th_ter_aquapark =
+'yes' then 1 when th_ter_aquapark = 'free' then 1 when th_ter_aquapark =
+'pay' then 2 else null end th_ter_aquapark,
+     case when th_ter_restaurant = 'no' then 0 when th_ter_restaurant =
+'yes' then 1 when th_ter_restaurant = 'free' then 1 when
+th_ter_restaurant = 'pay' then 2 else null end th_ter_restaurant,
+     case when th_ter_vip_restaurant = 'no' then 0 when
+th_ter_vip_restaurant = 'yes' then 1 when th_ter_vip_restaurant = 'free'
+then 1 when th_ter_vip_restaurant = 'pay' then 2 else null end
+th_ter_vip_restaurant,
+     case when th_ter_rest_a_la_carte = 'no' then 0 when
+th_ter_rest_a_la_carte = 'yes' then 1 when th_ter_rest_a_la_carte =
+'free' then 1 when th_ter_rest_a_la_carte = 'pay' then 2 else null end
+th_ter_rest_a_la_carte,
+     case when th_ter_cafe = 'no' then 0 when th_ter_cafe = 'yes' then 1
+when th_ter_cafe = 'free' then 1 when th_ter_cafe = 'pay' then 2 else
+null end th_ter_cafe,
+     case when th_ter_bar = 'no' then 0 when th_ter_bar = 'yes' then 1
+when th_ter_bar = 'free' then 1 when th_ter_bar = 'pay' then 2 else null
+end th_ter_bar,
+     case when th_ter_disco = 'no' then 0 when th_ter_disco = 'yes' then
+1 when th_ter_disco = 'free' then 1 when th_ter_disco = 'pay' then 2
+else null end th_ter_disco,
+     case when th_ter_bath = 'no' then 0 when th_ter_bath = 'yes' then 1
+when th_ter_bath = 'free' then 1 when th_ter_bath = 'pay' then 2 else
+null end th_ter_bath,
+     case when th_ter_lunapark = 'no' then 0 when th_ter_lunapark =
+'yes' then 1 when th_ter_lunapark = 'free' then 1 when th_ter_lunapark =
+'pay' then 2 else null end th_ter_lunapark,
+     case when th_ter_spa_centre = 'no' then 0 when th_ter_spa_centre =
+'yes' then 1 when th_ter_spa_centre = 'free' then 1 when
+th_ter_spa_centre = 'pay' then 2 else null end th_ter_spa_centre,
+     case when th_ter_amphitheatre = 'no' then 0 when
+th_ter_amphitheatre = 'yes' then 1 when th_ter_amphitheatre = 'free'
+then 1 when th_ter_amphitheatre = 'pay' then 2 else null end
+th_ter_amphitheatre,
+     case when th_ter_tv_salon = 'no' then 0 when th_ter_tv_salon =
+'yes' then 1 when th_ter_tv_salon = 'free' then 1 when th_ter_tv_salon =
+'pay' then 2 else null end th_ter_tv_salon,
+     case when th_ter_movie_theatre = 'no' then 0 when
+th_ter_movie_theatre = 'yes' then 1 when th_ter_movie_theatre = 'free'
+then 1 when th_ter_movie_theatre = 'pay' then 2 else null end
+th_ter_movie_theatre,
+
+     case when th_beach_owner = 'no' then 0 when th_beach_owner =
+'собств' then 1 when th_beach_owner = 'совм' then 2 else null end
+th_beach_owner,
+     case when th_beach_type = 'no' then 0 when th_beach_type = 'песок'
+then 1 when th_beach_type = 'галька' then 2 when th_beach_type =
+'песок-галька' then 3 else null end th_beach_type,
+     case when th_beach_chaise_longue = 'no' then 0 when
+th_beach_chaise_longue = 'yes' then 1 when th_beach_chaise_longue =
+'free' then 1 when th_beach_chaise_longue = 'pay' then 2 else null end
+th_beach_chaise_longue,
+     case when th_beach_mattress = 'no' then 0 when th_beach_mattress =
+'yes' then 1 when th_beach_mattress = 'free' then 1 when
+th_beach_mattress = 'pay' then 2 else null end th_beach_mattress,
+     case when th_beach_umbrella = 'no' then 0 when th_beach_umbrella =
+'yes' then 1 when th_beach_umbrella = 'free' then 1 when
+th_beach_umbrella = 'pay' then 2 else null end th_beach_umbrella,
+     case when th_beach_towel = 'no' then 0 when th_beach_towel = 'yes'
+then 1 when th_beach_towel = 'free' then 1 when th_beach_towel = 'pay'
+then 2 else null end th_beach_towel,
+     case when th_beach_shower = 'no' then 0 when th_beach_shower =
+'yes' then 1 when th_beach_shower = 'free' then 1 when th_beach_shower =
+'pay' then 2 else null end th_beach_shower,
+     case when th_beach_cab_change_clothes = 'no' then 0 when
+th_beach_cab_change_clothes = 'yes' then 1 when
+th_beach_cab_change_clothes = 'free' then 1 when
+th_beach_cab_change_clothes = 'pay' then 2 else null end
+th_beach_cab_change_clothes,
+     case when th_beach_lifeguards = 'no' then 0 when
+th_beach_lifeguards = 'yes' then 1 when th_beach_lifeguards = 'free'
+then 1 when th_beach_lifeguards = 'pay' then 2 else null end
+th_beach_lifeguards,
+     case when th_beach_pier = 'no' then 0 when th_beach_pier = 'yes'
+then 1 when th_beach_pier = 'free' then 1 when th_beach_pier = 'pay'
+then 2 else null end th_beach_pier,
+
+     case when th_enjoy_cartoon = 'no' then 0 when th_enjoy_cartoon =
+'yes' then 1 when th_enjoy_cartoon = 'free' then 1 when th_enjoy_cartoon
+= 'pay' then 2 else null end th_enjoy_cartoon,
+     case when th_enjoy_living_music = 'no' then 0 when
+th_enjoy_living_music = 'yes' then 1 when th_enjoy_living_music = 'free'
+then 1 when th_enjoy_living_music = 'pay' then 2 else null end
+th_enjoy_living_music,
+     case when th_enjoy_disco = 'no' then 0 when th_enjoy_disco = 'yes'
+then 1 when th_enjoy_disco = 'free' then 1 when th_enjoy_disco = 'pay'
+then 2 else null end th_enjoy_disco,
+     case when th_enjoy_comp_games = 'no' then 0 when
+th_enjoy_comp_games = 'yes' then 1 when th_enjoy_comp_games = 'free'
+then 1 when th_enjoy_comp_games = 'pay' then 2 else null end
+th_enjoy_comp_games,
+     case when th_enjoy_lunapark = 'no' then 0 when th_enjoy_lunapark =
+'yes' then 1 when th_enjoy_lunapark = 'free' then 1 when
+th_enjoy_lunapark = 'pay' then 2 else null end th_enjoy_lunapark,
+
+     case when th_serv_nanny = 'no' then 0 when th_serv_nanny = 'yes'
+then 1 when th_serv_nanny = 'free' then 1 when th_serv_nanny = 'pay'
+then 2 else null end th_serv_nanny,
+     case when th_serv_photographer = 'no' then 0 when
+th_serv_photographer = 'yes' then 1 when th_serv_photographer = 'free'
+then 1 when th_serv_photographer = 'pay' then 2 else null end
+th_serv_photographer,
+     case when th_serv_doctor = 'no' then 0 when th_serv_doctor = 'yes'
+then 1 when th_serv_doctor = 'free' then 1 when th_serv_doctor = 'pay'
+then 2 else null end th_serv_doctor,
+     case when th_serv_conserg = 'no' then 0 when th_serv_conserg =
+'yes' then 1 when th_serv_conserg = 'free' then 1 when th_serv_conserg =
+'pay' then 2 else null end th_serv_conserg,
+     case when th_serv_secretary = 'no' then 0 when th_serv_secretary =
+'yes' then 1 when th_serv_secretary = 'free' then 1 when
+th_serv_secretary = 'pay' then 2 else null end th_serv_secretary,
+     case when th_serv_wifi = 'no' then 0 when th_serv_wifi = 'yes' then
+1 when th_serv_wifi = 'free' then 1 when th_serv_wifi = 'pay' then 2
+else null end th_serv_wifi,
+     case when th_serv_car_renting = 'no' then 0 when
+th_serv_car_renting = 'yes' then 1 when th_serv_car_renting = 'free'
+then 1 when th_serv_car_renting = 'pay' then 2 else null end
+th_serv_car_renting,
+     case when th_serv_dry_cleaners = 'no' then 0 when
+th_serv_dry_cleaners = 'yes' then 1 when th_serv_dry_cleaners = 'free'
+then 1 when th_serv_dry_cleaners = 'pay' then 2 else null end
+th_serv_dry_cleaners,
+     case when th_serv_laundry = 'no' then 0 when th_serv_laundry =
+'yes' then 1 when th_serv_laundry = 'free' then 1 when th_serv_laundry =
+'pay' then 2 else null end th_serv_laundry,
+     case when th_serv_salon_beauty = 'no' then 0 when
+th_serv_salon_beauty = 'yes' then 1 when th_serv_salon_beauty = 'free'
+then 1 when th_serv_salon_beauty = 'pay' then 2 else null end
+th_serv_salon_beauty,
+     case when th_serv_tel = 'no' then 0 when th_serv_tel = 'yes' then 1
+when th_serv_tel = 'free' then 1 when th_serv_tel = 'pay' then 2 else
+null end th_serv_tel,
+     case when th_serv_fax = 'no' then 0 when th_serv_fax = 'yes' then 1
+when th_serv_fax = 'free' then 1 when th_serv_fax = 'pay' then 2 else
+null end th_serv_fax,
+     case when th_serv_xerox = 'no' then 0 when th_serv_xerox = 'yes'
+then 1 when th_serv_xerox = 'free' then 1 when th_serv_xerox = 'pay'
+then 2 else null end th_serv_xerox,
+     case when th_serv_butler = 'no' then 0 when th_serv_butler = 'yes'
+then 1 when th_serv_butler = 'free' then 1 when th_serv_butler = 'pay'
+then 2 else null end th_serv_butler,
+
+     case when th_baby_cartoon = 'no' then 0 when th_baby_cartoon =
+'yes' then 1 when th_baby_cartoon = 'free' then 1 when th_baby_cartoon =
+'pay' then 2 else null end th_baby_cartoon,
+     case when th_baby_miniclub = 'no' then 0 when th_baby_miniclub =
+'yes' then 1 when th_baby_miniclub = 'free' then 1 when th_baby_miniclub
+= 'pay' then 2 else null end th_baby_miniclub,
+     case when th_baby_pool = 'no' then 0 when th_baby_pool = 'yes' then
+1 when th_baby_pool = 'free' then 1 when th_baby_pool = 'pay' then 2
+else null end th_baby_pool,
+     case when th_baby_platform = 'no' then 0 when th_baby_platform =
+'yes' then 1 when th_baby_platform = 'free' then 1 when th_baby_platform
+= 'pay' then 2 else null end th_baby_platform,
+     case when th_baby_game_room = 'no' then 0 when th_baby_game_room =
+'yes' then 1 when th_baby_game_room = 'free' then 1 when
+th_baby_game_room = 'pay' then 2 else null end th_baby_game_room,
+     case when th_baby_menu = 'no' then 0 when th_baby_menu = 'yes' then
+1 when th_baby_menu = 'free' then 1 when th_baby_menu = 'pay' then 2
+else null end th_baby_menu,
+     case when th_baby_nunny = 'no' then 0 when th_baby_nunny = 'yes'
+then 1 when th_baby_nunny = 'free' then 1 when th_baby_nunny = 'pay'
+then 2 else null end th_baby_nunny,
+
+     case when th_health_massage = 'no' then 0 when th_health_massage =
+'yes' then 1 when th_health_massage = 'free' then 1 when
+th_health_massage = 'pay' then 2 else null end th_health_massage,
+     case when th_health_sauna = 'no' then 0 when th_health_sauna =
+'yes' then 1 when th_health_sauna = 'free' then 1 when th_health_sauna =
+'pay' then 2 else null end th_health_sauna,
+     case when th_health_turkish_bath = 'no' then 0 when
+th_health_turkish_bath = 'yes' then 1 when th_health_turkish_bath =
+'free' then 1 when th_health_turkish_bath = 'pay' then 2 else null end
+th_health_turkish_bath,
+     case when th_health_spa = 'no' then 0 when th_health_spa = 'yes'
+then 1 when th_health_spa = 'free' then 1 when th_health_spa = 'pay'
+then 2 else null end th_health_spa,
+     case when th_health_jakusi = 'no' then 0 when th_health_jakusi =
+'yes' then 1 when th_health_jakusi = 'free' then 1 when th_health_jakusi
+= 'pay' then 2 else null end th_health_jakusi,
+     case when th_health_solarium = 'no' then 0 when th_health_solarium
+= 'yes' then 1 when th_health_solarium = 'free' then 1 when
+th_health_solarium = 'pay' then 2 else null end th_health_solarium,
+
+     case when th_sport_horses = 'no' then 0 when th_sport_horses =
+'yes' then 1 when th_sport_horses = 'free' then 1 when th_sport_horses =
+'pay' then 2 else null end th_sport_horses,
+     case when th_sport_water = 'no' then 0 when th_sport_water = 'yes'
+then 1 when th_sport_water = 'free' then 1 when th_sport_water = 'pay'
+then 2 else null end th_sport_water,
+     case when th_sport_diving = 'no' then 0 when th_sport_diving =
+'yes' then 1 when th_sport_diving = 'free' then 1 when th_sport_diving =
+'pay' then 2 else null end th_sport_diving,
+     case when th_sport_golf = 'no' then 0 when th_sport_golf = 'yes'
+then 1 when th_sport_golf = 'free' then 1 when th_sport_golf = 'pay'
+then 2 else null end th_sport_golf,
+     case when th_sport_billiards = 'no' then 0 when th_sport_billiards
+= 'yes' then 1 when th_sport_billiards = 'free' then 1 when
+th_sport_billiards = 'pay' then 2 else null end th_sport_billiards,
+     case when th_sport_bowling = 'no' then 0 when th_sport_bowling =
+'yes' then 1 when th_sport_bowling = 'free' then 1 when th_sport_bowling
+= 'pay' then 2 else null end th_sport_bowling,
+     case when th_sport_ping_pong = 'no' then 0 when th_sport_ping_pong
+= 'yes' then 1 when th_sport_ping_pong = 'free' then 1 when
+th_sport_ping_pong = 'pay' then 2 else null end th_sport_ping_pong,
+     case when th_sport_tennis = 'no' then 0 when th_sport_tennis =
+'yes' then 1 when th_sport_tennis = 'free' then 1 when th_sport_tennis =
+'pay' then 2 else null end th_sport_tennis,
+     case when th_sport_volleyball = 'no' then 0 when
+th_sport_volleyball = 'yes' then 1 when th_sport_volleyball = 'free'
+then 1 when th_sport_volleyball = 'pay' then 2 else null end
+th_sport_volleyball,
+     case when th_sport_basketball = 'no' then 0 when
+th_sport_basketball = 'yes' then 1 when th_sport_basketball = 'free'
+then 1 when th_sport_basketball = 'pay' then 2 else null end
+th_sport_basketball,
+     case when th_sport_badminton = 'no' then 0 when th_sport_badminton
+= 'yes' then 1 when th_sport_badminton = 'free' then 1 when
+th_sport_badminton = 'pay' then 2 else null end th_sport_badminton,
+     case when th_sport_durts = 'no' then 0 when th_sport_durts = 'yes'
+then 1 when th_sport_durts = 'free' then 1 when th_sport_durts = 'pay'
+then 2 else null end th_sport_durts,
+     case when th_sport_checkers = 'no' then 0 when th_sport_checkers =
+'yes' then 1 when th_sport_checkers = 'free' then 1 when
+th_sport_checkers = 'pay' then 2 else null end th_sport_checkers,
+     case when th_sport_squash = 'no' then 0 when th_sport_squash =
+'yes' then 1 when th_sport_squash = 'free' then 1 when th_sport_squash =
+'pay' then 2 else null end th_sport_squash
+
+      from __tour_hotels_load3
+) l
+   set
+      h.th_name_ru = l.th_name_ru,
+
+      h.th_foundation_date = date(CONCAT(l.th_foundation_date,'-01-01')),
+
+      h.th_dist_city = l.th_dist_city,
+      h.th_dist_airport = l.th_dist_airport,
+      h.th_dist_beach = l.th_dist_beach,
+
+      h.th_description_ru = l.th_description_ru,
+
+      h.th_ter_courts = l.th_ter_courts,
+      h.th_ter_atheletic_room = l.th_ter_atheletic_room,
+      h.th_ter_turkish_bath = l.th_ter_turkish_bath,
+      h.th_ter_salon_beauty = l.th_ter_salon_beauty,
+      h.th_ter_kinder_platform = l.th_ter_kinder_platform,
+      h.th_ter_covered_pool = l.th_ter_covered_pool,
+      h.th_ter_open_pool = l.th_ter_open_pool,
+      h.th_ter_baby_pool = l.th_ter_baby_pool,
+      h.th_ter_soccer_field = l.th_ter_soccer_field,
+      h.th_ter_conf_hall = l.th_ter_conf_hall,
+      h.th_ter_shop_center = l.th_ter_shop_center,
+      h.th_ter_internet_cafe = l.th_ter_internet_cafe,
+      h.th_ter_gymnasium = l.th_ter_gymnasium,
+      h.th_ter_fitness_centre = l.th_ter_fitness_centre,
+      h.th_ter_aquapark = l.th_ter_aquapark,
+      h.th_ter_restaurant = l.th_ter_restaurant,
+      h.th_ter_vip_restaurant = l.th_ter_vip_restaurant,
+      h.th_ter_rest_a_la_carte = l.th_ter_rest_a_la_carte,
+      h.th_ter_cafe = l.th_ter_cafe,
+      h.th_ter_bar = l.th_ter_bar,
+      h.th_ter_disco = l.th_ter_disco,
+      h.th_ter_bath = l.th_ter_bath,
+      h.th_ter_lunapark = l.th_ter_lunapark,
+      h.th_ter_spa_centre = l.th_ter_spa_centre,
+      h.th_ter_amphitheatre = l.th_ter_amphitheatre,
+      h.th_ter_tv_salon = l.th_ter_tv_salon,
+      h.th_ter_movie_theatre = l.th_ter_movie_theatre,
+      h.th_beach_owner = l.th_beach_owner,
+      h.th_beach_type = l.th_beach_type,
+      h.th_beach_chaise_longue = l.th_beach_chaise_longue,
+      h.th_beach_mattress = l.th_beach_mattress,
+      h.th_beach_umbrella = l.th_beach_umbrella,
+      h.th_beach_towel = l.th_beach_towel,
+      h.th_beach_shower = l.th_beach_shower,
+      h.th_beach_cab_change_clothes = l.th_beach_cab_change_clothes,
+      h.th_beach_lifeguards = l.th_beach_lifeguards,
+      h.th_beach_pier = l.th_beach_pier,
+      h.th_enjoy_cartoon = l.th_enjoy_cartoon,
+      h.th_enjoy_living_music = l.th_enjoy_living_music,
+      h.th_enjoy_disco = l.th_enjoy_disco,
+      h.th_enjoy_comp_games = l.th_enjoy_comp_games,
+      h.th_enjoy_lunapark = l.th_enjoy_lunapark,
+      h.th_serv_nanny = l.th_serv_nanny,
+      h.th_serv_photographer = l.th_serv_photographer,
+      h.th_serv_doctor = l.th_serv_doctor,
+      h.th_serv_conserg = l.th_serv_conserg,
+      h.th_serv_secretary = l.th_serv_secretary,
+      h.th_serv_wifi = l.th_serv_wifi,
+      h.th_serv_car_renting = l.th_serv_car_renting,
+      h.th_serv_dry_cleaners = l.th_serv_dry_cleaners,
+      h.th_serv_laundry = l.th_serv_laundry,
+      h.th_serv_salon_beauty = l.th_serv_salon_beauty,
+      h.th_serv_tel = l.th_serv_tel,
+      h.th_serv_fax = l.th_serv_fax,
+      h.th_serv_xerox = l.th_serv_xerox,
+      h.th_serv_butler = l.th_serv_butler,
+      h.th_baby_cartoon = l.th_baby_cartoon,
+      h.th_baby_miniclub = l.th_baby_miniclub,
+      h.th_baby_pool = l.th_baby_pool,
+      h.th_baby_platform = l.th_baby_platform,
+      h.th_baby_game_room = l.th_baby_game_room,
+      h.th_baby_menu = l.th_baby_menu,
+      h.th_baby_nunny = l.th_baby_nunny,
+      h.th_health_massage = l.th_health_massage,
+      h.th_health_sauna = l.th_health_sauna,
+      h.th_health_turkish_bath = l.th_health_turkish_bath,
+      h.th_health_spa = l.th_health_spa,
+      h.th_health_jakusi = l.th_health_jakusi,
+      h.th_health_solarium = l.th_health_solarium,
+      h.th_sport_horses = l.th_sport_horses,
+      h.th_sport_water = l.th_sport_water,
+      h.th_sport_diving = l.th_sport_diving,
+      h.th_sport_golf = l.th_sport_golf,
+      h.th_sport_billiards = l.th_sport_billiards,
+      h.th_sport_bowling = l.th_sport_bowling,
+      h.th_sport_ping_pong = l.th_sport_ping_pong,
+      h.th_sport_tennis = l.th_sport_tennis,
+      h.th_sport_volleyball = l.th_sport_volleyball,
+      h.th_sport_basketball = l.th_sport_basketball,
+      h.th_sport_badminton = l.th_sport_badminton,
+      h.th_sport_durts = l.th_sport_durts,
+      h.th_sport_checkers = l.th_sport_checkers,
+      h.th_sport_squash = l.th_sport_squash
+
+   where
+      h.th_id = l.th_id
+#    AND h.th_id > 1936
+
+		</data>
+    </item>
+
+    <item>
+        <expect>stat_visits</expect>
+        <data>UPDATE `stat_visits` SET `sv_n_id` = ?, `sv_date` = CURDATE(), `sv_count` = 1 WHERE data > NOW()</data>
+    </item>
+
+    <item>
+        <expect>stat_visits</expect>
+        <data>UPDATE `stat_visits` (`sv_n_id`, `sv_date`, `sv_count`) VALUES (?, CURDATE(), 1) WHERE data > NOW()</data>
+    </item>
+
+-->
+</getTables>
+
