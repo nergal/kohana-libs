@@ -34,13 +34,4 @@ if ( ! defined('SYSPATH')) {
     require_once __DIR__ . '/../classes/database/mysql.php';
 
     class Kohana_Exception extends Exception { }
-
-    class Kohana {
-        static public function auto_load($classname) {
-            if ( ! class_exists($classname)) {
-                throw new ErrorException($classname);
-            }
-        }
-    }
-
 }
