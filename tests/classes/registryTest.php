@@ -188,7 +188,7 @@ class RegistryTest extends PHPUnit_Framework_TestCase
             $fail_class = 'classdoesnotexist';
             $registry = @Registry::setClassName($fail_class);
             $this->fail('Expected exception, because we cannot initialize the registry using a non-existent class.');
-        } catch (Kohana_Exception $e) {
+        } catch (ErrorException $e) {
             $this->assertContains($fail_class, $e->getMessage());
         }
     }
